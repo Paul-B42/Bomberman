@@ -1,3 +1,3 @@
  int main(){
-    printf("mort aux vaches");
+    printf("mort aux vache.s.x.tar.gz");
  }
