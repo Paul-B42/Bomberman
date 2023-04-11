@@ -1,0 +1,42 @@
+numéros sur la carte
+
+#-1 bloc indestructible
+#00 emplacement libre
+#01 bloc destructible
+#02 
+#03 
+#04 
+#05 
+#06 
+#07 
+#08 
+#09 
+
+#10 
+#11 joueur 1
+#12 joueur 2
+#13 joueur 3
+#14 joueur 4 
+#15
+#16
+#17
+#18
+#19
+
+#20 bombe simple
+#21 bombe ligne
+#22 bombe collone
+#23 grosse bombe
+#24
+#25 bonnus de vitesse
+#26 
+#27
+#28
+#29
+
+#30 ...
+#31
+#32
+#33
+#34
+#35
