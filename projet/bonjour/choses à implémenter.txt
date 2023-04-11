@@ -1,0 +1,43 @@
+Bomberman
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+moteur du jeu
+
+    initialisation de la map
+    game over
+    pack de texture
+    power up
+    boss
+    IA
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+interface
+
+    bouton jouer
+    choix du joueur
+    choix de la map (+générateur de map aléatoire)
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+joueur
+
+    barre de vie
+    position
+    inventaire
+    caractéristiques
+    vitesse
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+jeu
+    poser bombe
+    détruire bloc
+    déplacement
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+compléments
+    convertion (x,y) en (i,j)
+    ...
