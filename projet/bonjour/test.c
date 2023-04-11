@@ -9,6 +9,7 @@ struct player{
     int* inventory; // inventaire des objets du joueur
 };
 
+
 /* inventory */ // tableau de ~10 entier
 // 0 - bombe classique
 // 1 - bombe ++
@@ -63,8 +64,38 @@ void poser_item(int** carte, struct player p, int ID_item){
 
 }
 
-void explosion(int** carte, int ID_bombe){
-    // caser les blocs, pv des blocs / joueurs -1
+void break_bloc(int** carte, int i, int j,  struct player* p){
+        if (carte[i][j] == 1){ carte[i][j] = 0;}
+        else if (carte[i][j]/10 == 1 /* corespond aux ID joueurs*/){ p[carte[i][j]%10].vie -= 1} 
+        else if (carte[i][j]/10 == 2 /* corespond aux ID bombes*/){ explosion(carte, carte[i][j], i, j); carte[i][j] = 0;} 
+}
+
+void explosion(struct plateau  plat,  int ID_bombe, int x, int y){ // croix de 3x3 (20)
+    switch (ID_bombe){
+        case 20 :
+            for (int k = max(0,x-1); k <=min(plat.collone, x+1); k++ ){ // s'arrêter lors du premier bloc indestructible
+                break_bloc(carte, k, y); 
+            }
+            for (int k = max(0,y-1); k <=min(plat.ligne, y+1); k++ ){ // s'arrêter lors du premier bloc indestructible
+                break_bloc(carte, x, y);
+            }
+        case 21 : 
+            for (int k = max(0,x-4); k <=min(plat.collone, x+4); k++ ){ // s'arrêter lors du premier bloc indestructible
+                break_bloc(carte, k, y);
+            }
+         case 22 : 
+            for (int k = max(0,y-4); k <=min(plat.ligne, y+4); k++ ){ // s'arrêter lors du premier bloc indestructible
+                break_bloc(carte, x, k);
+            }
+        case 23 : 
+            for (int k = max(0,x-2); k <=min(plat.collone, x+2); k++ ){ // s'arrêter lors du premier bloc indestructible
+                break_bloc(carte, k, y); 
+            }
+            for (int k = max(0,y-2); k <=min(plat.ligne, y+2); k++ ){ // s'arrêter lors du premier bloc indestructible
+                break_bloc(carte, x, y);
+            } 
+        break;
+    }    
 }
 
 
