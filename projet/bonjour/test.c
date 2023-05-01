@@ -322,13 +322,13 @@ int main(int argc, char *argv[]){
     }
     // afficher_carte(plat);
     printf("Hello World ! \n\n");
-    // for (int i = 1; i<n-1; i++){ // murs cassables
-    //     for (int j = 1; j < m-1; j++){
-    //         carte[i][j] = 1;
-    //     }
-    // }
-    // afficher_carte(plat);
-    // printf("Hello World ! \n\n");
+    for (int i = 1; i<n-1; i++){ // murs cassables
+        for (int j = 1; j < m-1; j++){
+            carte[i][j] = 1;
+        }
+    }
+    afficher_carte(plat);
+    printf("Hello World ! \n\n");
     for(int i2 = 2; i2+2<n; i2+=2){ // ajout des murs incassables
         for(int j2 = 2; j2+2<m; j2+=2){
             carte[i2][j2] = -1;

@@ -1,0 +1,17 @@
+CC=gcc
+CFLAGS=-Wall 
+LDFLAGS=`sdl2-config --cflags --libs` -lSDL2 -lSDL2_image
+
+all: test.x
+
+%.x: *.o
+	$(CC) $^ -o $@ $(CFLAGS) $(LDFLAGS) 
+
+*.o : *.c
+	$(CC) $^ -c $(CFLAGS) $(LDFLAGS)  
+
+clean:
+	rm -f *~ *.o
+
+realclean: clean
+	rm -f *.x
