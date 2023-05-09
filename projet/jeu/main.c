@@ -15,8 +15,8 @@
 #define NB_b 4 // nombre de bombes
 
 #define TILE_SIZE 64
-#define WINDOW_WIDTH TILE_SIZE*13
-#define WINDOW_HEIGHT TILE_SIZE*11
+#define WINDOW_WIDTH TILE_SIZE*17
+#define WINDOW_HEIGHT TILE_SIZE*13
 
 struct plateau{
     int** tabl;
@@ -26,6 +26,9 @@ struct plateau{
 
 
 struct plateau Init_map(int n, int m) {
+
+    srand(time(NULL));
+    int a;
 
     // initialisation de la carte
     int **carte = malloc (n * sizeof (int*)) ; // création de la carte
@@ -41,7 +44,8 @@ struct plateau Init_map(int n, int m) {
     }
     for (int i = 1; i<n-1; i++){ // murs cassables
         for (int j = 1; j < m-1; j++){
-            carte[i][j] = 1;
+            a = rand()%5;
+            if(a>0){carte[i][j] = 1;}else{carte[i][j] = 0;}
         }
     }
     for(int i2 = 2; i2+2<n; i2+=2){ // ajout des murs incassables
@@ -147,6 +151,12 @@ int main(int argc, char** argv) {
         // Affichage de la fenêtre
         SDL_RenderPresent(renderer);
     }
+
+    /**********************************************************************************************/
+
+
+
+    /**********************************************************************************************/
 
     // Libération des ressources
     for (int i = 0; i < 3; i++) {

@@ -7,7 +7,7 @@ all: test.x
 %.x: *.o
 	$(CC) $^ -o $@ $(CFLAGS) $(LDFLAGS) 
 
-*.o : *.c
+*.o : main.c
 	$(CC) $^ -c $(CFLAGS) $(LDFLAGS)  
 
 clean:

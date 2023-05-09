@@ -186,7 +186,7 @@ int main(int argc, char *argv[]){
     
    
 
-    afficher(plat, Joueurs);
+    //afficher(plat, Joueurs);
     printf("\n");
 
     while (tic<30){
@@ -204,7 +204,7 @@ int main(int argc, char *argv[]){
             case 'b' : poser_item(plat, Joueurs[J]->x, Joueurs[J]->y, ID_bombe); break;
         }
         printf("\n");
-        afficher(plat, Joueurs);
+        //afficher(plat, Joueurs);
         
     }
     for (int i = 0; i < n; i++){free(carte[i]);};

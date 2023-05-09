@@ -6,9 +6,9 @@
 
 // descriptif des fonctions // 
 
-// 1 // le corps 
+// 1 // le corps du jeu
 
- - fonction "same" ...
+ - fonction "same" 
 
 // 2 // l'affichage avec SDL
 
