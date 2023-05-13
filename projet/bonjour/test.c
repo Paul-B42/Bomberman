@@ -345,16 +345,16 @@ int main(int argc, char *argv[]){
 
     
 
-    // // définition des bombes
-    // struct bombe Bomb[NB_b];
-    // struct bombe B1 = {1,1}; // croix (5) // 2
-    // struct bombe B2 = {2,2}; // croix (9) // 3
-    // struct bombe B3 = {3,0}; // ligne (7) // 4
-    // struct bombe B4 = {0,3}; // collonne (7) // 5
-    // Bomb[0] = B1;
-    // Bomb[1] = B2;
-    // Bomb[2] = B3;
-    // Bomb[3] = B4;
+    // définition des bombes
+    struct bombe Bomb[NB_b];
+    struct bombe B1 = {1,1}; // croix (5) // 2
+    struct bombe B2 = {2,2}; // croix (9) // 3
+    struct bombe B3 = {3,0}; // ligne (7) // 4
+    struct bombe B4 = {0,3}; // collonne (7) // 5
+    Bomb[0] = B1;
+    Bomb[1] = B2;
+    Bomb[2] = B3;
+    Bomb[3] = B4;
 
     // initialisation des joueurs
 
