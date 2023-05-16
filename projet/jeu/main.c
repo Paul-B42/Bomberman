@@ -18,6 +18,8 @@
 #define WINDOW_WIDTH TILE_SIZE*17
 #define WINDOW_HEIGHT TILE_SIZE*13
 
+#define P_blocs 100 // poucentage de bloc destructible (entier compris entre 0 et 100)
+
 struct plateau{
     int** tabl;
     int lignes;
@@ -36,6 +38,11 @@ struct player{
 struct bombe{
     int L;
     int C;
+};
+
+struct point{
+    int i;
+    int j;
 };
 
 struct plateau Init_map(int n, int m) {
@@ -57,8 +64,8 @@ struct plateau Init_map(int n, int m) {
     }
     for (int i = 1; i<n-1; i++){ // murs cassables
         for (int j = 1; j < m-1; j++){
-            a = rand()%5;
-            if(a>0){carte[i][j] = 1;}else{carte[i][j] = 0;}
+            a = rand()%99;
+            if(a < P_blocs){carte[i][j] = 1;}else{carte[i][j] = 0;}
         }
     }
     for(int i2 = 2; i2+2<n; i2+=2){ // ajout des murs incassables
@@ -76,9 +83,7 @@ struct plateau Init_map(int n, int m) {
     return pl;
 }
 
-void animation(int i, int j){
 
-}
 
 // fonctions principales
 /*******************************************************/
@@ -139,6 +144,10 @@ int break_bloc(struct plateau*  plat, struct player* Joueurs[NB_j], int i, int j
         for(int k = 0; k<NB_j; k++){ 
             if (Joueurs[k]->y == i && Joueurs[k]->x ==j){ // joueurs
                 Joueurs[k]->vie -= 1;
+                if (Joueurs[k]->vie == 0){
+                    Joueurs[k]->x = k+1;
+                    Joueurs[k]->y = 0;
+                }
             }
         }
         return A; // prévient si il détruit une bombe
@@ -148,14 +157,19 @@ int break_bloc(struct plateau*  plat, struct player* Joueurs[NB_j], int i, int j
 
 void explosion(struct plateau*  plat, struct player* Joueurs[NB_j], int i, int j, struct bombe Bomb[NB_b]){
     int A = break_bloc(plat, Joueurs, i,j); // ID_bombe = valeur sur la carte -2 
+
+    if (A > 1){
     int l = Bomb[A-2].L;
     int c = Bomb[A-2].C;
     int k;
+
+    plat->tabl[i][j] = 10;
 
     // direction Nord
     k = 1; 
     while(k <= c && plat->tabl[i+k][j] != -1){
         A = break_bloc(plat, Joueurs, i+k, j); 
+        plat->tabl[i+k][j] = 10;
         if (A != 0){
             plat->tabl[i+k][j] = A;
             explosion(plat, Joueurs, i+k, j, Bomb); 
@@ -167,6 +181,7 @@ void explosion(struct plateau*  plat, struct player* Joueurs[NB_j], int i, int j
     k = 1; 
     while(k <= c && plat->tabl[i-k][j] != -1){
         A = break_bloc(plat, Joueurs, i-k, j); 
+        plat->tabl[i-k][j] = 10;
         if (A != 0){
             plat->tabl[i-k][j] = A;
             explosion(plat, Joueurs, i-k, j, Bomb);
@@ -178,6 +193,7 @@ void explosion(struct plateau*  plat, struct player* Joueurs[NB_j], int i, int j
     k = 1; 
     while(k <= l && plat->tabl[i][j+k] != -1){
         A = break_bloc(plat, Joueurs, i, j+k); 
+        plat->tabl[i][j+k] = 10;
         if (A != 0){
             plat->tabl[i][j+k] = A;
             explosion(plat, Joueurs, i, j+k, Bomb);
@@ -189,12 +205,14 @@ void explosion(struct plateau*  plat, struct player* Joueurs[NB_j], int i, int j
     k = 1; 
     while(k <= l && plat->tabl[i][j-k] != -1){
         A = break_bloc(plat, Joueurs, i, j-k); 
+        plat->tabl[i][j-k] = 10;
         if (A != 0){
             plat->tabl[i][j-k] = A;
             explosion(plat, Joueurs, i, j-k, Bomb);
             A = 0; 
         }
         k++;
+    }
     }
 }
 /*******************************************************/
@@ -257,7 +275,7 @@ int main(int argc, char** argv) {
     }
 
     // Chargement des images
-    Image images[11];    // On charge 3 images 
+    Image images[12];    // On charge 3 images 
     images[0] = load_image("obsi64.png", renderer);
     images[1] = load_image("grass64.png", renderer);
     images[2] = load_image("bois64.png", renderer);
@@ -269,6 +287,7 @@ int main(int argc, char** argv) {
     images[8] = load_image("J2_64.png", renderer);
     images[9] = load_image("J3_64.png", renderer);
     images[10] = load_image("J4_64.png", renderer);
+    images[11] = load_image("boom1.png", renderer);
     
 
     // Matrice de choix d'images
@@ -297,6 +316,8 @@ int main(int argc, char** argv) {
     Bomb[2] = B3;
     Bomb[3] = B4;
 
+    // tableau des blocs cassé
+
     // timer
     SDL_TimerID timerID;
     Uint32 delay = 3000; // Temps de délai en millisecondes (3 secondes)
@@ -319,6 +340,9 @@ int main(int argc, char** argv) {
     int quit = 0;
     int ID = 0;
 
+    matrix[5][5] = 3;
+    matrix[7][5] = 5;
+    matrix[5][7] = 4;
 
     while (!quit) {
         // Gestion des événements
@@ -333,14 +357,10 @@ int main(int argc, char** argv) {
                     case SDLK_RIGHT: move(matrix, ID, 'E', Joueurs); break;
 
                     case SDLK_a : poser_item(&map, Joueurs[ID]->x, Joueurs[ID]->y, 2); 
+                        explosion(&map, Joueurs, Joueurs[ID]->y, Joueurs[ID]->x, Bomb);
                         params->i = Joueurs[ID]->y;
                         params->j = Joueurs[ID]->x;
                         timerID = SDL_AddTimer(delay, timerCallback, params);
-                        if (timerID == 0) {
-                            printf("Erreur lors de la création du timer : %s\n", SDL_GetError());
-                            SDL_Quit();
-                            return EXIT_FAILURE;
-                        }
                         break;
                     case SDLK_z : poser_item(&map, Joueurs[ID]->x, Joueurs[ID]->y, 3); 
                         params->i = Joueurs[ID]->y;
@@ -380,6 +400,7 @@ int main(int argc, char** argv) {
             SDL_Rect playerRect = {Joueurs[k]->x * TILE_SIZE, Joueurs[k]->y * TILE_SIZE, playerImage.width, playerImage.height};
             SDL_RenderCopy(renderer, playerImage.texture, NULL, &playerRect);
         }
+        
 
         // Affichage de la fenêtre
         SDL_RenderPresent(renderer);
@@ -389,7 +410,7 @@ int main(int argc, char** argv) {
     // Libération des ressources
     free(params); 
     SDL_RemoveTimer(timerID);
-    for (int i = 0; i < 11; i++) {
+    for (int i = 0; i < 12; i++) {
         SDL_DestroyTexture(images[i].texture);
     }
     SDL_DestroyRenderer(renderer);
