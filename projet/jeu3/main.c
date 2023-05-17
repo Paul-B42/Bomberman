@@ -274,6 +274,32 @@ void Init_Joueurs(struct player* Joueurs[NB_j]){
     Joueurs[3]->x = WINDOW_WIDTH / TILE_SIZE -2; Joueurs[3]->y = 1;
 }
 
+
+// fonction pour écrire un texte sur un renderer
+void write(char* texte, TTF_Font* font, SDL_Color color, SDL_Renderer* renderer, int x, int y){
+    char text[10];
+    sprintf(text, "%s", texte);
+    SDL_Surface* Surface = TTF_RenderText_Solid(font, text, color);
+    SDL_Texture* Texture = SDL_CreateTextureFromSurface(renderer, Surface);
+    SDL_Rect Rect = {x, y, Surface->w, Surface->h};
+    SDL_RenderCopy(renderer, Texture, NULL, &Rect);
+    SDL_FreeSurface(Surface);
+    SDL_DestroyTexture(Texture);
+}
+
+
+// fonction pour écrire des chiffres sur un renderer
+void write_number(int num, TTF_Font* font, SDL_Color color, SDL_Renderer* renderer, int x, int y){
+    char text[10];
+    sprintf(text, "%d", num);
+    SDL_Surface* Surface = TTF_RenderText_Solid(font, text, color);
+    SDL_Texture* Texture = SDL_CreateTextureFromSurface(renderer, Surface);
+    SDL_Rect Rect = {x, y, Surface->w, Surface->h};
+    SDL_RenderCopy(renderer, Texture, NULL, &Rect);
+    SDL_FreeSurface(Surface);
+    SDL_DestroyTexture(Texture);
+}
+
 // Structure pour stocker les informations sur une image
 typedef struct {
     SDL_Texture* texture;   // Texture SDL pour l'image
@@ -431,9 +457,8 @@ for (int k = 0; k < NB_j; k++) {
 
     // texte - inventaire
     TTF_Init();
-    TTF_Font* font = TTF_OpenFont("polices/georgia.ttf", 48);
+    TTF_Font* font = TTF_OpenFont("polices/Georgia.ttf", 48);
     SDL_Color color = {255, 255, 255}; 
-    char text[10];
 
     // timer
     Uint32 delay = 3000; // Temps de délai en millisecondes (3 secondes)
@@ -448,10 +473,6 @@ for (int k = 0; k < NB_j; k++) {
     int ID = 0;
     int a = 0;
     TTF_Init();
-
-    matrix[5][5] = 2;
-    matrix[7][5] = 5;
-    matrix[5][7] = 4;
 
     Image image = load_image("loading.png", renderer);
     SDL_Rect dst_rect = {0, 0, image.width, image.height};
@@ -568,38 +589,16 @@ for (int k = 0; k < NB_j; k++) {
             SDL_RenderCopy(renderer, playerImage.texture, NULL, playerRect);
         }
 
-
-
         // Affichage de la vie du joueur
-        sprintf(text, "%d", Joueurs[ID]->vie);
-        SDL_Surface* lifeSurface = TTF_RenderText_Solid(font, text, color);
-        SDL_Texture* lifeTexture = SDL_CreateTextureFromSurface(renderer, lifeSurface);
-        SDL_Rect lifeRect = {0, 0, lifeSurface->w, lifeSurface->h};
-        SDL_RenderCopy(renderer, lifeTexture, NULL, &lifeRect);
+        write_number(Joueurs[ID]->vie, font, color, renderer, 0, 0);
 
         // Affichage du nom du joueur
-        sprintf(text, "%s", Joueurs[ID]->nom);
-        SDL_Surface* NameSurface = TTF_RenderText_Solid(font, text, color);
-        SDL_Texture* NameTexture = SDL_CreateTextureFromSurface(renderer, NameSurface);
-        SDL_Rect NameRect = {TILE_SIZE, WINDOW_HEIGHT - TILE_SIZE, NameSurface->w, NameSurface->h};
-        SDL_RenderCopy(renderer, NameTexture, NULL, &NameRect);
+        write(Joueurs[ID]->nom, font, color, renderer, TILE_SIZE, WINDOW_HEIGHT - TILE_SIZE);
 
         // Affichage de l'inventaire du joueur
         for (int i = 0; i < 4; i++) {
-            sprintf(text, "%d", Joueurs[ID]->inventory[i]);
-            SDL_Surface* itemSurface = TTF_RenderText_Solid(font, text, color);
-            SDL_Texture* itemTexture = SDL_CreateTextureFromSurface(renderer, itemSurface);
-            SDL_Rect itemRect = {0, (i + 2) * TILE_SIZE, itemSurface->w, itemSurface->h};
-            SDL_RenderCopy(renderer, itemTexture, NULL, &itemRect);
-
-            // Libération de la mémoire allouée pour la surface et la texture de l'item
-            SDL_FreeSurface(itemSurface);
-            SDL_DestroyTexture(itemTexture);
+            write_number(Joueurs[ID]->inventory[i], font, color, renderer, 0, (i+2)*TILE_SIZE);
         }
-
-        // Libération de la mémoire allouée pour la surface et la texture de la vie
-        SDL_FreeSurface(lifeSurface);
-        SDL_DestroyTexture(lifeTexture);
 
         // fin du jeu
         if (!fin){
@@ -607,10 +606,19 @@ for (int k = 0; k < NB_j; k++) {
             for (int k = 0; k<NB_j; k++){if(Joueurs[k]->etat){a++;}}
             if (a<2){fin = true; end = SDL_GetTicks();}
         }
-        if (SDL_GetTicks() - end > wait*5 && fin){
-            Image image = load_image("loading.png", renderer); // mettre le tableau des scores
+        if (SDL_GetTicks() - end > delay && fin){
+            Image image = load_image("leaderbord.png", renderer);
             SDL_Rect dst_rect = {0, 0, image.width, image.height};
             SDL_RenderCopy(renderer, image.texture, NULL, &dst_rect);
+            for (int k = 0; k < NB_j; k++){
+                strcpy(chemin, "skins/"); 
+                strcat(chemin, skins[k]);
+                strcat(chemin, "/Big.png");
+                Image image = load_image(chemin, renderer);
+                SDL_Rect dst_rect = {290, 195+(Joueurs[k]->rank-1)*150, image.width, image.height};
+                SDL_RenderCopy(renderer, image.texture, NULL, &dst_rect); 
+                write(Joueurs[k]->nom, font, color, renderer, 450, 195+(Joueurs[k]->rank-1)*150+40);
+            }
             SDL_RenderPresent(renderer);
 
             while (SDL_PollEvent(&event) && fin){
@@ -625,10 +633,7 @@ for (int k = 0; k < NB_j; k++) {
                         Init_Joueurs(Joueurs);
                     }
                 }
-
             }
-            
-            
         }
         
 
