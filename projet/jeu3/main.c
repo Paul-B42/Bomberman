@@ -186,6 +186,7 @@ int break_bloc(struct plateau*  plat, struct player* Joueurs[NB_j], int i, int j
                     Joueurs[k]->etat = false;
                     Joueurs[k]->x = 0;
                     Joueurs[k]->y = 0;
+                    Joueurs[k]->direction = 'N';
                     for(int l = 0; l<NB_j; l++){
                         if(l != k && Joueurs[l]->etat){Joueurs[l]->rank--;}
                     }
@@ -263,7 +264,7 @@ void explosion(struct plateau*  plat, struct player* Joueurs[NB_j], int i, int j
 void Init_Joueurs(struct player* Joueurs[NB_j]){
     for (int k = 0; k < NB_j; k++){
         Joueurs[k]->etat = true;
-        Joueurs[k]->vie = 3;
+        Joueurs[k]->vie = 100;
         Joueurs[k]->direction = 'N';
         Joueurs[k]->rank = 4;
         for (int i = 0; i<4; i++){Joueurs[k]->inventory[i] = 10;}
@@ -417,10 +418,10 @@ for (int k = 0; k < NB_j; k++) {
     int inv2[] = {10, 10, 10, 10}; 
     int inv3[] = {10, 10, 10, 10}; 
     int inv4[] = {10, 10, 10, 10}; 
-    struct player J1 = {true, "Romain", 3, 1, 1, 'N', 1, inv1,4}; 
-    struct player J2 = {true, "Christophe", 3, WINDOW_WIDTH / TILE_SIZE -2, WINDOW_HEIGHT / TILE_SIZE -2, 'N', 1, inv2,4};
-    struct player J3 = {true, "Orso", 3, 1, WINDOW_HEIGHT / TILE_SIZE -2, 'N', 1, inv3,4};
-    struct player J4 = {true, "Paul", 3, WINDOW_WIDTH / TILE_SIZE -2, 1, 'N', 1, inv4,4};
+    struct player J1 = {true, "Romain", 100, 1, 1, 'N', 1, inv1,4}; 
+    struct player J2 = {true, "Christophe", 100, WINDOW_WIDTH / TILE_SIZE -2, WINDOW_HEIGHT / TILE_SIZE -2, 'N', 1, inv2,4};
+    struct player J3 = {true, "Orso", 100, 1, WINDOW_HEIGHT / TILE_SIZE -2, 'N', 1, inv3,4};
+    struct player J4 = {true, "Paul", 100, WINDOW_WIDTH / TILE_SIZE -2, 1, 'N', 1, inv4,4};
     Joueurs[0] = &J1;
     Joueurs[1] = &J2;
     Joueurs[2] = &J3;
@@ -529,7 +530,7 @@ for (int k = 0; k < NB_j; k++) {
         // gérer les explosions
         for (int i = 1; i < WINDOW_HEIGHT / TILE_SIZE -1; i++) {
             for (int j = 1; j < WINDOW_WIDTH / TILE_SIZE -1; j++) {
-                if (abs(SDL_GetTicks() - explose[i][j] - delay) < 80 ){
+                if (abs(SDL_GetTicks() - explose[i][j] - delay) < 20 ){
                     explosion(&map, Joueurs, i, j, Bomb, boom);
                 }
             }
@@ -547,6 +548,7 @@ for (int k = 0; k < NB_j; k++) {
                 SDL_RenderCopy(renderer, image.texture, NULL, &dst_rect);
                 // Affichage des explosions
                 if(SDL_GetTicks() - boom[i][j] < wait){
+                    break_bloc(&map, Joueurs, i, j);
                     Image image = images[12];
                     SDL_Rect dst_rect = {j * TILE_SIZE, i * TILE_SIZE, image.width, image.height};
                     SDL_RenderCopy(renderer, image.texture, NULL, &dst_rect);
