@@ -1,6 +1,6 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
-#include <SDL2/SDL.h>
+#include <SDL2/SDL_ttf.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -35,12 +35,14 @@ struct plateau{
 };
 
 struct player{
+    bool etat; // vivant ou mort
     char* nom; // nom du joueur
     int vie; // entier compris entre 0 et 10
     int x; int y; // position du joueur
     char direction; // direction du joueur nord, sud, est, ouest
     int speed; // vitesse du personnage
     int* inventory; // inventaire des objets du joueur
+    int rank;
 };
 
 struct bombe{
@@ -135,13 +137,17 @@ void move(int** carte, int ID, char dir, struct player* Joueurs[NB_j]){
             case 9 : Joueurs[ID]->inventory[3] += 5; carte[Joueurs[ID]->y][Joueurs[ID]->x] = 0; break;
             case 10 : Joueurs[ID]->vie ++; carte[Joueurs[ID]->y][Joueurs[ID]->x] = 0; break;
         }
+    }else{
+        Joueurs[ID]->direction = dir;
     }
 }
 
 
 
 void poser_item(struct plateau* plat, int x, int y, int ID_item){
-    plat->tabl[y][x] = ID_item;
+    if (plat->tabl[y][x] == 0){
+        plat->tabl[y][x] = ID_item;
+    } 
 }
 
 
@@ -150,7 +156,7 @@ int break_bloc(struct plateau*  plat, struct player* Joueurs[NB_j], int i, int j
         int A = 0;
         int bonus;
 
-        if (plat->tabl[i][j] == 1 || plat->tabl[i][j] > 6){ // mur cassable + bonus
+        if (plat->tabl[i][j] == 1){ // mur cassable + bonus
             plat->tabl[i][j] = 0; 
             bonus = rand()%99;
             if (bonus < P_bonus){
@@ -168,14 +174,22 @@ int break_bloc(struct plateau*  plat, struct player* Joueurs[NB_j], int i, int j
         } else if (plat->tabl[i][j] > 1 && plat->tabl[i][j] < 6){ // bombes 
             A = plat->tabl[i][j];
             plat->tabl[i][j] = 0;
-        } 
+
+        } else if (plat->tabl[i][j] > 5){
+            plat->tabl[i][j] = 0;
+        }
         
         for(int k = 0; k<NB_j; k++){ 
             if (Joueurs[k]->y == i && Joueurs[k]->x ==j){ // joueurs
                 Joueurs[k]->vie -= 1;
-                if (Joueurs[k]->vie == 0){
-                    Joueurs[k]->x = k+1;
+                if (Joueurs[k]->vie == 0 && Joueurs[k]->etat){
+                    Joueurs[k]->etat = false;
+                    Joueurs[k]->x = 0;
                     Joueurs[k]->y = 0;
+                    for(int l = 0; l<NB_j; l++){
+                        if(l != k && Joueurs[l]->etat){Joueurs[l]->rank--;}
+                    }
+                    
                 }
             }
         }
@@ -345,11 +359,14 @@ int main(int argc, char** argv) {
     
     // initialisation des joueurs
     struct player* Joueurs[NB_j];
-    int inv1[] = {10, 10, 10, 10}; // ou int inv1[4] = {10, 10, 10, 10};
-    struct player J1 = {"Romain", 3, 1, 1, 'N', 1, inv1}; // noms avec des nscanf
-    struct player J2 = {"Christophe", 3, WINDOW_WIDTH / TILE_SIZE -2, WINDOW_HEIGHT / TILE_SIZE -2, 'S', 1, NULL};
-    struct player J3 = {"Orso", 3, 1, WINDOW_HEIGHT / TILE_SIZE -2, 'E', 1, NULL};
-    struct player J4 = {"Paul", 3, WINDOW_WIDTH / TILE_SIZE -2, 1, 'O', 1, NULL};
+    int inv1[] = {10, 10, 10, 10}; 
+    int inv2[] = {10, 10, 10, 10}; 
+    int inv3[] = {10, 10, 10, 10}; 
+    int inv4[] = {10, 10, 10, 10}; 
+    struct player J1 = {true, "Romain", 3, 1, 1, 'N', 1, inv1,4}; // noms avec des nscanf
+    struct player J2 = {true, "Christophe", 3, WINDOW_WIDTH / TILE_SIZE -2, WINDOW_HEIGHT / TILE_SIZE -2, 'S', 1, inv2,4};
+    struct player J3 = {true, "Orso", 3, 1, WINDOW_HEIGHT / TILE_SIZE -2, 'E', 1, inv3,4};
+    struct player J4 = {true, "Paul", 3, WINDOW_WIDTH / TILE_SIZE -2, 1, 'O', 1, inv4,4};
     Joueurs[0] = &J1;
     Joueurs[1] = &J2;
     Joueurs[2] = &J3;
@@ -384,6 +401,12 @@ int main(int argc, char** argv) {
         }
     }
 
+    // texte - inventaire
+    TTF_Init();
+    TTF_Font* font = TTF_OpenFont("polices/georgia.ttf", 48);
+    SDL_Color color = {255, 255, 255}; 
+    char text[10];
+
     // timer
     Uint32 delay = 3000; // Temps de délai en millisecondes (3 secondes)
     Uint32 wait = 1000; // temps d'exposition de l'explosion
@@ -393,6 +416,7 @@ int main(int argc, char** argv) {
     SDL_Event event;
     int quit = 0;
     int ID = 0;
+    TTF_Init();
 
     matrix[5][5] = 2;
     matrix[7][5] = 5;
@@ -466,7 +490,7 @@ int main(int argc, char** argv) {
                 SDL_RenderCopy(renderer, image.texture, NULL, &dst_rect);
                 // Affichage des explosions
                 if(SDL_GetTicks() - boom[i][j] < wait){
-                    Image image = images[11];
+                    Image image = images[12];
                     SDL_Rect dst_rect = {j * TILE_SIZE, i * TILE_SIZE, image.width, image.height};
                     SDL_RenderCopy(renderer, image.texture, NULL, &dst_rect);
                 }
@@ -474,35 +498,72 @@ int main(int argc, char** argv) {
         }
 
         // Affichage du joueur à sa position actuelle
-for (int k = 0; k < NB_j; k++) {
-    Image playerImage;
-    SDL_Rect playerRect = {Joueurs[k]->x * TILE_SIZE, Joueurs[k]->y * TILE_SIZE, 0, 0};
+        for (int k = 0; k < NB_j; k++) {
+            SDL_Rect tempRect;
+            Image playerImage;
+            SDL_Rect* playerRect = &tempRect;
+            
+            switch (Joueurs[k]->direction) {
+                case 'N':
+                    playerImage = player_images[4 * k];
+                    break;
+                case 'S':
+                    playerImage = player_images[4 * k + 1];
+                    break;
+                case 'E':
+                    playerImage = player_images[4 * k + 2];
+                    break;
+                case 'O':
+                    playerImage = player_images[4 * k + 3];
+                    break;
+            }
+            
+            playerRect->w = playerImage.width;
+            playerRect->h = playerImage.height;
 
-    switch (Joueurs[k]->direction) {
-        case 'N':
-            playerImage = player_images[4 * k];
-            playerRect.w = playerImage.width;
-            playerRect.h = playerImage.height;
-            break;
-        case 'S':
-            playerImage = player_images[4 * k + 1];
-            playerRect.w = playerImage.width;
-            playerRect.h = playerImage.height;
-            break;
-        case 'E':
-            playerImage = player_images[4 * k + 2];
-            playerRect.w = playerImage.width;
-            playerRect.h = playerImage.height;
-            break;
-        case 'O':
-            playerImage = player_images[4 * k + 3];
-            playerRect.w = playerImage.width;
-            playerRect.h = playerImage.height;
-            break;
-    }
+            if (!Joueurs[k]->etat) {
+                playerRect->x = Joueurs[k]->rank * TILE_SIZE;
+                playerRect->y = 0;
+            } else {
+                playerRect->x = Joueurs[k]->x * TILE_SIZE;
+                playerRect->y = Joueurs[k]->y * TILE_SIZE;
+            }
 
-    SDL_RenderCopy(renderer, playerImage.texture, NULL, &playerRect);
-}
+            SDL_RenderCopy(renderer, playerImage.texture, NULL, playerRect);
+        }
+
+
+
+        // Affichage de la vie du joueur
+        sprintf(text, "%d", Joueurs[ID]->vie);
+        SDL_Surface* lifeSurface = TTF_RenderText_Solid(font, text, color);
+        SDL_Texture* lifeTexture = SDL_CreateTextureFromSurface(renderer, lifeSurface);
+        SDL_Rect lifeRect = {0, 0, lifeSurface->w, lifeSurface->h};
+        SDL_RenderCopy(renderer, lifeTexture, NULL, &lifeRect);
+
+        // Affichage du nom du joueur
+        sprintf(text, "%s", Joueurs[ID]->nom);
+        SDL_Surface* NameSurface = TTF_RenderText_Solid(font, text, color);
+        SDL_Texture* NameTexture = SDL_CreateTextureFromSurface(renderer, NameSurface);
+        SDL_Rect NameRect = {TILE_SIZE, WINDOW_HEIGHT - TILE_SIZE, NameSurface->w, NameSurface->h};
+        SDL_RenderCopy(renderer, NameTexture, NULL, &NameRect);
+
+        // Affichage de l'inventaire du joueur
+        for (int i = 0; i < 4; i++) {
+            sprintf(text, "%d", Joueurs[ID]->inventory[i]);
+            SDL_Surface* itemSurface = TTF_RenderText_Solid(font, text, color);
+            SDL_Texture* itemTexture = SDL_CreateTextureFromSurface(renderer, itemSurface);
+            SDL_Rect itemRect = {0, (i + 2) * TILE_SIZE, itemSurface->w, itemSurface->h};
+            SDL_RenderCopy(renderer, itemTexture, NULL, &itemRect);
+
+            // Libération de la mémoire allouée pour la surface et la texture de l'item
+            SDL_FreeSurface(itemSurface);
+            SDL_DestroyTexture(itemTexture);
+        }
+
+        // Libération de la mémoire allouée pour la surface et la texture de la vie
+        SDL_FreeSurface(lifeSurface);
+        SDL_DestroyTexture(lifeTexture);
 
 
         // Affichage de la fenêtre
@@ -515,6 +576,7 @@ for (int k = 0; k < NB_j; k++) {
     free (matrix) ; free(boom); free(explose);
     for (int i = 0; i < 13; i++) { SDL_DestroyTexture(images[i].texture);}
     for (int i = 0; i < 4*NB_j; i++) { SDL_DestroyTexture(player_images[i].texture);}
+    TTF_CloseFont(font);
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_Quit();
