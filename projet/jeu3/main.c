@@ -189,7 +189,7 @@ int break_bloc(struct plateau*  plat, struct player* Joueurs[NB_j], int i, int j
         }
         
         for(int k = 0; k<NB_j; k++){ 
-            if (Joueurs[k]->y == i && Joueurs[k]->x ==j){ // joueurs
+            if (Joueurs[k]->y == i && Joueurs[k]->x ==j && Joueurs[k]->etat){ // joueurs
                 Joueurs[k]->vie -= 1;
                 if (Joueurs[k]->vie == 0 && Joueurs[k]->etat){
                     Joueurs[k]->etat = false;
@@ -358,7 +358,7 @@ int main(int argc, char** argv) {
         return EXIT_FAILURE;
     }
 
-    SDL_Window* window = SDL_CreateWindow("Pavage d'images", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_SHOWN);
+    SDL_Window* window = SDL_CreateWindow("Bomberman", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_SHOWN);
     if (!window) {
         printf("Erreur de création de la fenêtre : %s\n", SDL_GetError());
         SDL_Quit();
@@ -599,8 +599,8 @@ int main(int argc, char** argv) {
                     dst_rect.w = image.width;
                     dst_rect.h = image.height;
                     SDL_RenderCopy(renderer, image.texture, NULL, &dst_rect);
-                } else if (SDL_GetTicks()-end - boom[i][j] < wait*2){
-                    boom[i][j] = 0;
+                // } else if (SDL_GetTicks()-end - boom[i][j] < wait*2){
+                //     boom[i][j] = 0;
                 }
             }
         }
@@ -654,9 +654,9 @@ int main(int argc, char** argv) {
         if (!fin){
             a = 0;
             for (int k = 0; k<NB_j; k++){if(Joueurs[k]->etat){a++;}}
-            if (a<2){fin = true; end = SDL_GetTicks()- wait - delay; for (int k = 0; k<NB_j; k++){Joueurs[k]->score += POINTS[Joueurs[k]->rank-1];}}
+            if (a<2){fin = true; end = SDL_GetTicks()- wait; for (int k = 0; k<NB_j; k++){Joueurs[k]->score += POINTS[Joueurs[k]->rank-1];}}
         }
-        if (SDL_GetTicks() - wait - delay - end > delay && fin){
+        if (SDL_GetTicks() - wait - end > delay && fin){
             if (!aff_cl){
                 image = menu[1];
             } else {
@@ -690,6 +690,7 @@ int main(int argc, char** argv) {
             while (SDL_PollEvent(&event) && fin){
                 if (event.type == SDL_QUIT) {
                     quit = 1;
+                    fin = false;
                 } else if (event.type == SDL_KEYDOWN) {
                     switch (event.key.keysym.sym){
                         case SDLK_SPACE : 
