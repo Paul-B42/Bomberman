@@ -29,7 +29,7 @@ char* PSEUDOS[NB_j] = {"Romain", "Christophe", "Orso", "Paul"};
 char* SKINS[NB_j] = {"Mario", "Bowser", "DK", "Yoshi"};
 
 int POINTS[NB_j] = {5, 4, 3, 2};
-Uint32 end = 0;
+Uint32 end = -4000;
 
 
 
@@ -417,10 +417,13 @@ int main(int argc, char** argv) {
     }
 
     // images de menu - attente
-    Image menu[3];
+    Image menu[6];
     menu[0] = load_image("loading.png", renderer);
     menu[1] = load_image("leaderboard1.png", renderer);
     menu[2] = load_image("leaderboard2.png", renderer);
+    menu[3] = load_image("home.png", renderer);
+    menu[4] = load_image("choix.png", renderer);
+    menu[5] = load_image("regles.png", renderer);
 
 
     // Matrice de choix d'images
@@ -487,15 +490,17 @@ int main(int argc, char** argv) {
 
     // Boucle principale
     SDL_Event event;
-    
     bool fin = false;
     int quit = 0;
     int ID = 0;
     int a = 0;
-    bool dep = false;
+    // bool dep = false;
+    int home = 1;
     TTF_Init();
     Image image;
     SDL_Rect dst_rect;
+    Uint32 time = 0;
+
 
     image = menu[0];
     dst_rect.x = 0;
@@ -505,34 +510,79 @@ int main(int argc, char** argv) {
     SDL_RenderCopy(renderer, image.texture, NULL, &dst_rect);
     SDL_RenderPresent(renderer);
 
-    SDL_Delay(wait+delay);
+    SDL_Delay(2000);
 
     while (!quit) {
 
-        // Gestion des événements
-        while (SDL_PollEvent(&event)) {
+        while(home > 0 && !quit){
+            SDL_PollEvent(&event);
+            if (event.type == SDL_QUIT){
+                quit = 1;
+            } else if (event.type == SDL_KEYDOWN){
+                switch(event.key.keysym.sym){
+                    case SDLK_p : 
+                        home = 0;
+                        aff_cl = false;
+                        fin = false;
+                        a = 0;
+                        map = Init_map(WINDOW_HEIGHT / TILE_SIZE, WINDOW_WIDTH / TILE_SIZE);
+                        matrix = map.tabl;
+                        Init_Joueurs(Joueurs);
+                        image = menu[0];
+                        dst_rect.x = 0;
+                        dst_rect.y = 0;
+                        dst_rect.w = image.width;
+                        dst_rect.h = image.height;
+                        SDL_RenderCopy(renderer, image.texture, NULL, &dst_rect);
+                        SDL_RenderPresent(renderer);
+                        SDL_Delay(2000);
+                        break;
+                    case SDLK_s : 
+                        if(home == 1){home = 2;}
+                        break;
+                    case SDLK_c : 
+                        if(home == 1){home = 3;}
+                        break;
+                    case SDLK_r : 
+                        if(home > 1){home = 1;}
+                        break;
+                }
+            }
+            if (home > 0){
+                image = menu[home+2];
+                dst_rect.x = 0;
+                dst_rect.y = 0;
+                dst_rect.w = image.width;
+                dst_rect.h = image.height;
+                SDL_RenderCopy(renderer, image.texture, NULL, &dst_rect);
+                SDL_RenderPresent(renderer);
+            }
+            
+        }
+        
+        while (SDL_PollEvent(&event) && home == 0) {
             if (event.type == SDL_QUIT) {
                 quit = 1;
             } else if (event.type == SDL_KEYDOWN && Joueurs[ID]->vie > 0) {
                 switch (event.key.keysym.sym) {
                     case SDLK_UP: 
                         if (Joueurs[ID]->frame == 0){
-                            dep = move(matrix, ID, 'S', Joueurs);
+                            move(matrix, ID, 'S', Joueurs);
                         }
                         break;
                     case SDLK_DOWN: 
                         if (Joueurs[ID]->frame == 0){
-                            dep = move(matrix, ID, 'N', Joueurs);
+                            move(matrix, ID, 'N', Joueurs);
                         }
                         break;
                     case SDLK_LEFT:
                         if (Joueurs[ID]->frame == 0){
-                            dep = move(matrix, ID, 'O', Joueurs);
+                            move(matrix, ID, 'O', Joueurs);
                         }
                         break;
                     case SDLK_RIGHT:
                         if (Joueurs[ID]->frame == 0){
-                            dep = move(matrix, ID, 'E', Joueurs);
+                            move(matrix, ID, 'E', Joueurs);
                         }
                         break;
 
@@ -599,8 +649,6 @@ int main(int argc, char** argv) {
                     dst_rect.w = image.width;
                     dst_rect.h = image.height;
                     SDL_RenderCopy(renderer, image.texture, NULL, &dst_rect);
-                // } else if (SDL_GetTicks()-end - boom[i][j] < wait*2){
-                //     boom[i][j] = 0;
                 }
             }
         }
@@ -649,14 +697,15 @@ int main(int argc, char** argv) {
             sprintf(text, "%d", Joueurs[ID]->inventory[i]);
             write(text, font, color, renderer, 0, (i+2)*TILE_SIZE);
         }
+        
 
         // fin du jeu
         if (!fin){
             a = 0;
             for (int k = 0; k<NB_j; k++){if(Joueurs[k]->etat){a++;}}
-            if (a<2){fin = true; end = SDL_GetTicks()- wait; for (int k = 0; k<NB_j; k++){Joueurs[k]->score += POINTS[Joueurs[k]->rank-1];}}
+            if (a<2){fin = true; time = SDL_GetTicks(); for (int k = 0; k<NB_j; k++){Joueurs[k]->score += POINTS[Joueurs[k]->rank-1];}}
         }
-        if (SDL_GetTicks() - wait - end > delay && fin){
+        if (SDL_GetTicks() - time > delay && fin){
             if (!aff_cl){
                 image = menu[1];
             } else {
@@ -694,6 +743,7 @@ int main(int argc, char** argv) {
                 } else if (event.type == SDL_KEYDOWN) {
                     switch (event.key.keysym.sym){
                         case SDLK_SPACE : 
+                            end = time - delay - wait;
                             aff_cl = false;
                             fin = false;
                             a = 0;
@@ -707,13 +757,15 @@ int main(int argc, char** argv) {
                             dst_rect.h = image.height;
                             SDL_RenderCopy(renderer, image.texture, NULL, &dst_rect);
                             SDL_RenderPresent(renderer);
-                            SDL_Delay(delay);
+                            SDL_Delay(2000);
                             break;
                         case SDLK_c : 
-                            for(int i = 0; i<NB_j; i++){cl[i] = i;}
                             cl = classement(Joueurs);
                             aff_cl = true;
                             break;
+                        case SDLK_h : 
+                            home = 1;
+                            fin = false;
                     }
                 }
             }
@@ -722,15 +774,16 @@ int main(int argc, char** argv) {
 
         // Affichage de la fenêtre
         SDL_RenderPresent(renderer);
+        
     }
     
 
     // Libération des ressources
     for (int i = 0; i < WINDOW_HEIGHT / TILE_SIZE; i++){free(matrix[i]); free(boom[i]); free(explose[i]);}
     free (matrix) ; free(boom); free(explose);
-    free(cl);
+    //free(cl);
     for (int i = 0; i < 13; i++) { SDL_DestroyTexture(images[i].texture);}
-    for (int i = 0; i < 3; i++) { SDL_DestroyTexture(menu[i].texture);}
+    for (int i = 0; i < 6; i++) { SDL_DestroyTexture(menu[i].texture);}
     for (int i = 0; i < NB_j; i++) {for (int j = 0; j < 5; j++){SDL_DestroyTexture(player_images[i][j].texture);}}
     TTF_CloseFont(font);
     SDL_DestroyRenderer(renderer);
