@@ -20,7 +20,7 @@
 
 // pourcentage de chance d'obtenir un bonus
 #define P_bonus 30
-#define P_blocs 10 // poucentage de bloc destructible (entier compris entre 0 et 100)
+#define P_blocs 75 // poucentage de bloc destructible (entier compris entre 0 et 100)
 
 #define disp 200 // temps en ms de propagation de l'explosion
 #define pas 8;
