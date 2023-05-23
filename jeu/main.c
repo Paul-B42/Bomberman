@@ -1,6 +1,7 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_ttf.h>
+#include <SDL2/SDL_mixer.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -143,6 +144,7 @@ bool move(int** carte, int ID, char dir, struct player* Joueurs[NB_j]){
             case 8 : Joueurs[ID]->inventory[2] += 5; carte[Joueurs[ID]->y][Joueurs[ID]->x] = 0; break;
             case 9 : Joueurs[ID]->inventory[3] += 5; carte[Joueurs[ID]->y][Joueurs[ID]->x] = 0; break;
             case 10 : Joueurs[ID]->vie ++; carte[Joueurs[ID]->y][Joueurs[ID]->x] = 0; break;
+            case 11 : Joueurs[ID]->frame = 1; carte[Joueurs[ID]->y][Joueurs[ID]->x] = 0; break;
         }
         return true;
     }else{
@@ -169,13 +171,14 @@ int break_bloc(struct plateau*  plat, struct player* Joueurs[NB_j], int i, int j
             plat->tabl[i][j] = 0; 
             bonus = rand()%99;
             if (bonus < P_bonus){
-                bonus = rand()%4;
+                bonus = rand()%10;
                 switch (bonus){
                     case 0 : plat->tabl[i][j] = 6; break;
                     case 1 : plat->tabl[i][j] = 7; break;
                     case 2 : plat->tabl[i][j] = 8; break;
                     case 3 : plat->tabl[i][j] = 9; break;
                     case 4 : plat->tabl[i][j] = 10; break;
+                    default : plat->tabl[i][j] = 11; break;
                 }
             }
 
@@ -373,10 +376,15 @@ int main(int argc, char** argv) {
         return EXIT_FAILURE;
     }
 
+    Mix_Init(MIX_INIT_MP3);
+    Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048);
+    Mix_Chunk* sound = Mix_LoadWAV("son/son_rickroll.mp3");
+    int channel = Mix_PlayChannel(-1, sound, 0);
+
     //SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN);
 
     // Chargement des images blocs
-    Image images[13];    
+    Image images[17];    
     images[0] = load_image("incassable.png", renderer);
     images[1] = load_image("vide.png", renderer);
     images[2] = load_image("cassable.png", renderer);
@@ -389,7 +397,11 @@ int main(int argc, char** argv) {
     images[9] = load_image("bonus.png", renderer);
     images[10] = load_image("bonus.png", renderer);
     images[11] = load_image("bonus.png", renderer);
-    images[12] = load_image("boom.png", renderer);
+    images[12] = load_image("bonus.png", renderer);
+    images[13] = load_image("boom.png", renderer);
+    images[14] = load_image("rickroll_1.png", renderer);
+    images[15] = load_image("rickroll_2.png", renderer);
+    images[16] = load_image("rickroll_3.png", renderer);
 
     // Chargement des images joueurs
     char chemin[50];
@@ -488,6 +500,8 @@ int main(int argc, char** argv) {
     // timer
     Uint32 delay = 3000; // Temps de délai en millisecondes (3 secondes)
     Uint32 wait = 1000; // temps d'exposition de l'explosion
+
+    Uint32 bonus = - 4000;
 
 
     // Boucle principale
@@ -647,7 +661,7 @@ int main(int argc, char** argv) {
                 // Affichage des explosions
                 if(SDL_GetTicks()-end - boom[i][j] < wait){
                     //break_bloc(&map, Joueurs, i, j);
-                    image = images[12];
+                    image = images[13];
                     dst_rect.w = image.width;
                     dst_rect.h = image.height;
                     SDL_RenderCopy(renderer, image.texture, NULL, &dst_rect);
@@ -700,6 +714,29 @@ int main(int argc, char** argv) {
             write(text, font, color, renderer, 0, (i+2)*TILE_SIZE);
         }
         
+        // rickroll
+        for(int k = 0; k < NB_j; k++){
+            if (Joueurs[k]->frame == 1){
+                Joueurs[k]->frame = 0;
+                bonus = SDL_GetTicks();
+                Mix_Playing(channel);
+            }
+        }
+        if (SDL_GetTicks() - bonus < delay){
+            if(SDL_GetTicks() - bonus < delay/3){
+                image = images[14];
+            } else if (SDL_GetTicks() - bonus > 2*delay/3){
+                image = images[16];
+            }else{
+                image = images[15];
+            }
+            
+            dst_rect.x = 0;
+            dst_rect.y = 0;
+            dst_rect.w = image.width;
+            dst_rect.h = image.height;
+            SDL_RenderCopy(renderer, image.texture, NULL, &dst_rect);
+        }
 
         // fin du jeu
         if (!fin){
@@ -794,12 +831,15 @@ int main(int argc, char** argv) {
     for (int i = 0; i < WINDOW_HEIGHT / TILE_SIZE; i++){free(matrix[i]); free(boom[i]); free(explose[i]);}
     free (matrix) ; free(boom); free(explose);
     //free(cl);
-    for (int i = 0; i < 13; i++) { SDL_DestroyTexture(images[i].texture);}
+    for (int i = 0; i < 17; i++) { SDL_DestroyTexture(images[i].texture);}
     for (int i = 0; i < 6; i++) { SDL_DestroyTexture(menu[i].texture);}
     for (int i = 0; i < NB_j; i++) {for (int j = 0; j < 5; j++){SDL_DestroyTexture(player_images[i][j].texture);}}
     TTF_CloseFont(font);
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_Quit();
+    Mix_FreeChunk(sound);
+    Mix_CloseAudio();
+    Mix_Quit();
     return EXIT_SUCCESS;
 }
