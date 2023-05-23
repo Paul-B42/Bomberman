@@ -378,7 +378,7 @@ int main(int argc, char** argv) {
 
     Mix_Init(MIX_INIT_MP3);
     Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048);
-    Mix_Chunk* sound = Mix_LoadWAV("son/son_rickroll.mp3");
+    Mix_Chunk* sound = Mix_LoadWAV("sons/son_rickroll.mp3");
     int channel = Mix_PlayChannel(-1, sound, 0);
 
     //SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN);
