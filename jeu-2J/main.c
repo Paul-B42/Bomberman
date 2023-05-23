@@ -20,13 +20,13 @@
 
 // pourcentage de chance d'obtenir un bonus
 #define P_bonus 30
-#define P_blocs 75 // poucentage de bloc destructible (entier compris entre 0 et 100)
+#define P_blocs 50 // poucentage de bloc destructible (entier compris entre 0 et 100)
 
 #define disp 200 // temps en ms de propagation de l'explosion
 #define pas 8;
 
 char* PSEUDOS[NB_j] = {"Romain", "Christophe", "Orso", "Paul"};
-char* SKINS[NB_j] = {"Kamec", "Peach", "Toad", "Luigi"};
+char* SKINS[NB_j] = {"Kamec", "Peach", "Toad", "Bowser"};
 
 int POINTS[NB_j] = {5, 4, 3, 2};
 Uint32 end = -4000;

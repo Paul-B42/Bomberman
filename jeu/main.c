@@ -2,10 +2,6 @@
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_ttf.h>
 #include <SDL2/SDL_mixer.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <math.h>
 #include <time.h>
 #include <stdbool.h>
 
@@ -21,13 +17,13 @@
 
 // pourcentage de chance d'obtenir un bonus
 #define P_bonus 30
-#define P_blocs 75 // poucentage de bloc destructible (entier compris entre 0 et 100)
+#define P_blocs 50 // poucentage de bloc destructible (entier compris entre 0 et 100)
 
 #define disp 200 // temps en ms de propagation de l'explosion
 #define pas 8;
 
 char* PSEUDOS[NB_j] = {"Romain", "Christophe", "Orso", "Paul"};
-char* SKINS[NB_j] = {"Kamec", "Peach", "Toad", "Luigi"};
+char* SKINS[NB_j] = {"Kamec", "Peach", "Mario", "Bowser"};
 
 int POINTS[NB_j] = {5, 4, 3, 2};
 Uint32 end = -4000;
@@ -171,7 +167,7 @@ int break_bloc(struct plateau*  plat, struct player* Joueurs[NB_j], int i, int j
             plat->tabl[i][j] = 0; 
             bonus = rand()%99;
             if (bonus < P_bonus){
-                bonus = rand()%10;
+                bonus = rand()%9;
                 switch (bonus){
                     case 0 : plat->tabl[i][j] = 6; break;
                     case 1 : plat->tabl[i][j] = 7; break;
@@ -349,17 +345,24 @@ Image load_image(const char* filename, SDL_Renderer* renderer) {
 }
 
 
-int main(int argc, char** argv) {
 
-    if (SDL_Init(SDL_INIT_TIMER) != 0) {
-        printf("Erreur d'initialisation de la SDL : %s\n", SDL_GetError());
-        return EXIT_FAILURE;
+
+int main() {
+
+    // Initialisation de SDL
+    if (SDL_Init(/*SDL_INIT_AUDIO |*/ SDL_INIT_TIMER | SDL_INIT_VIDEO) < 0) {
+        printf("Erreur lors de l'initialisation de SDL : %s\n", SDL_GetError());
+        return 1;
     }
 
-    if (SDL_Init(SDL_INIT_VIDEO) != 0) {
-        printf("Erreur d'initialisation de la SDL : %s\n", SDL_GetError());
-        return EXIT_FAILURE;
-    }
+    // // Initialisation de SDL Mixer
+    // if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 4096) < 0) {
+    //     printf("Erreur lors de l'initialisation de SDL Mixer : %s\n", Mix_GetError());
+    //     return 1;
+    // }
+
+    // // Chargement du fichier audio
+    // Mix_Music* music = Mix_LoadMUS("sons/son_rickroll.mp3");
 
     SDL_Window* window = SDL_CreateWindow("Bomberman", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_SHOWN);
     if (!window) {
@@ -375,12 +378,6 @@ int main(int argc, char** argv) {
         SDL_Quit();
         return EXIT_FAILURE;
     }
-
-    Mix_Init(MIX_INIT_MP3);
-    Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048);
-    Mix_Chunk* sound = Mix_LoadWAV("sons/son_rickroll.mp3");
-    int channel = Mix_PlayChannel(-1, sound, 0);
-
     //SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN);
 
     // Chargement des images blocs
@@ -439,6 +436,8 @@ int main(int argc, char** argv) {
     menu[4] = load_image("choix.png", renderer);
     menu[5] = load_image("regles.png", renderer);
 
+    // chargement des sons
+    //Mix_Music* music = Mix_LoadMUS("sons/son_rickroll.mp3");
 
     // Matrice de choix d'images
     struct plateau map = Init_map(WINDOW_HEIGHT / TILE_SIZE, WINDOW_WIDTH / TILE_SIZE);
@@ -719,7 +718,7 @@ int main(int argc, char** argv) {
             if (Joueurs[k]->frame == 1){
                 Joueurs[k]->frame = 0;
                 bonus = SDL_GetTicks();
-                Mix_Playing(channel);
+                //Mix_PlayMusic(music, 1);
             }
         }
         if (SDL_GetTicks() - bonus < delay){
@@ -835,11 +834,10 @@ int main(int argc, char** argv) {
     for (int i = 0; i < 6; i++) { SDL_DestroyTexture(menu[i].texture);}
     for (int i = 0; i < NB_j; i++) {for (int j = 0; j < 5; j++){SDL_DestroyTexture(player_images[i][j].texture);}}
     TTF_CloseFont(font);
+    // Mix_FreeMusic(music);
+    // Mix_CloseAudio();
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_Quit();
-    Mix_FreeChunk(sound);
-    Mix_CloseAudio();
-    Mix_Quit();
     return EXIT_SUCCESS;
 }
